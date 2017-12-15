@@ -148,7 +148,13 @@ export default {
     data() {
         return {
             draft: {},
-            current: {},
+            current: {
+              team: {
+                name: ''
+              },
+              teams: [],
+              percent: 0
+            },
             draftTimer: '00:00',
             timer: { ...this.timerInput },
             start: new Date(),
