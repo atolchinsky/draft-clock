@@ -46,154 +46,146 @@
 
 
 <script>
-import io from "socket.io-client";
-const socket = io("http://localhost:3002");
+import io from 'socket.io-client'
+const socket = io('http://localhost:3002')
 
-socket.on("next round started", function(data) {});
+socket.on('next round started', function(data) {})
 
-var start; // when each plasyer started his/her turn
-var totalStart; // when the overall draft started
+//var start = new Date() // when each plasyer started his/her turn
+var totalStart // when the overall draft started
 
-const minutes = 60; // seconds per minute
-const hours = 60 * 60; // seconds per hour
-const days = 60 * 60 * 24; // seconds per day
+
+const minutes = 60 // seconds per minute
+const hours = 60 * 60 // seconds per hour
+const days = 60 * 60 * 24 // seconds per day
 
 var populateDraft = function(rounds, teams) {
-  console.log("populateDraft(" + rounds + ", " + teams.length + ")");
-  var draft = [];
-  var total = rounds * teams.length;
-  var count = 0;
+    console.log('populateDraft(' + rounds + ', ' + teams.length + ')')
+    var draft = []
+    var total = rounds * teams.length
+    var count = 0
 
-  for (var r = 1; r <= rounds; r += 1) {
-    var start;
-    var end;
-    var incr;
-    var s = 1; //selection
+    for (var r = 1; r <= rounds; r += 1) {
+        var start
+        var end
+        var incr
+        var s = 1 //selection
 
-    // odd rounds (1, 3, 5, ...) count up from 1 ... N
-    if (r % 2 == 1) {
-      start = 1;
-      end = function(v) {
-        return v <= teams.length;
-      };
-      incr = 1;
-      // even rounds (2, 4, 6, ...) count down from N ... 1
-    } else {
-      start = teams.length;
-      end = function(v) {
-        return v >= 1;
-      };
-      incr = -1;
+        // odd rounds (1, 3, 5, ...) count up from 1 ... N
+        if (r % 2 == 1) {
+            start = 1
+            end = function(v) {
+                return v <= teams.length
+            }
+            incr = 1
+            // even rounds (2, 4, 6, ...) count down from N ... 1
+        } else {
+            start = teams.length
+            end = function(v) {
+                return v >= 1
+            }
+            incr = -1
+        }
+
+        for (var t = start; end(t); t += incr) {
+            count += 1
+            var percent = count / total * 100
+            draft.push({
+                round: r,
+                rounds: rounds,
+                selection: s,
+                team: teams[t - 1],
+                teams: teams,
+                percent: percent
+            })
+            s += 1
+        }
     }
-
-    for (var t = start; end(t); t += incr) {
-      count += 1;
-      var percent = count / total * 100;
-      draft.push({
-        round: r,
-        rounds: rounds,
-        selection: s,
-        team: teams[t - 1],
-        teams: teams,
-        percent: percent
-      });
-      s += 1;
-    }
-  }
-  return draft;
-};
+    return draft
+}
 
 var formatSeconds = function(s) {
-  var d = Math.floor(s / days);
-  s -= d * days;
-  var h = Math.floor(s / hours);
-  s -= h * hours;
-  var m = Math.floor(s / minutes);
-  s -= m * minutes;
+    var d = Math.floor(s / days)
+    s -= d * days
+    var h = Math.floor(s / hours)
+    s -= h * hours
+    var m = Math.floor(s / minutes)
+    s -= m * minutes
 
-  var str = "";
-  if (d > 0) {
-    str += d + ".";
-  }
-  if (h > 0) {
-    str += h + ":";
-  }
-  if (m < 10) {
-    str += "0" + m + ":";
-  } else {
-    str += m + ":";
-  }
-  if (s < 10) {
-    str += "0" + s;
-  } else {
-    str += s;
-  }
+    var str = ''
+    if (d > 0) {
+        str += d + '.'
+    }
+    if (h > 0) {
+        str += h + ':'
+    }
+    if (m < 10) {
+        str += '0' + m + ':'
+    } else {
+        str += m + ':'
+    }
+    if (s < 10) {
+        str += '0' + s
+    } else {
+        str += s
+    }
 
-  return str;
-};
-
-//   clearTimeout(this.timer);
-
-//   // if the draft isn't done...
-//   if (this.draft.length > 0) {
-//     // get the next 'player'
-//     this.current = this.draft.shift();
-
-//     // record when this player started
-//     start = new Date();
-
-//     // fire off the clock
-//     this.timer = setTimeout(this.tick, 1000);
-
-//     // ... else draft is over
-//   } else {
-//     // shut down the UI
-//     var s = Math.floor((new Date() - totalStart) / 1000);
-//     var str = formatSeconds(s);
-//   }
+    return str
+}
 
 export default {
-  name: "Summary",
-  props: {
-    team: {
-      type: Object,
-      default: {}
+    name: 'Summary',
+    props: {
+        team: {
+            type: Object,
+            default: {}
+        },
+        timerInput: {
+            type: Object,
+            default: {}
+        }
     },
-    timerInput: {
-      type: Object,
-      default: {}
-    }
-  },
-  data() {
-    return {
-      draft: {},
-      current: {},
-      draftTimer: "00:00",
-      timer: { ...this.timerInput }
-    };
-  },
-  mounted: function() {
-    this.$socket.emit("next round", this.team);
-  },
-  sockets: {
-    nextRound: function(data) {
-      console.log(data);
-      if (data.current.teamName && data.current.teamName === this.team.name) {
-        this.current = data.current;
-      }
-    }
-  },
-  methods: {
-    nextRound() {
-      this.$socket.emit("next round", this.team);
+    data() {
+        return {
+            draft: {},
+            current: {},
+            draftTimer: '00:00',
+            timer: { ...this.timerInput },
+            start: new Date(),
+            interval: {}
+        }
     },
-    tick() {
-      var s = Math.floor((new Date() - start) / 1000);
-      var str = formatSeconds(s);
-      this.draftTimer = str;
+    mounted: function() {
+        this.$socket.emit('next round', this.team)
+    },
+    sockets: {
+        nextRound: function(data) {
+            if (
+                data.current.teamName &&
+                data.current.teamName === this.team.name
+            ) {
+                clearInterval(this.interval)
+                console.log(data)
+                console.log(this.interval)
 
-      this.timer = setTimeout(this.tick, 1000);
+                this.current = data.current
+                this.start = new Date();
+                this.interval = setInterval(this.tick, 1000)
+
+            }
+        }
+    },
+    methods: {
+        nextRound() {
+            this.$socket.emit('next round', this.team)
+        },
+        tick() {
+            var s = Math.floor((new Date() - this.start) / 1000)
+            var str = formatSeconds(s)
+            this.draftTimer = str
+
+            //this.current.timer = setTimeout(this.tick, 1000)
+        }
     }
-  }
-};
+}
 </script>
