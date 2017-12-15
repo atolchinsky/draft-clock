@@ -45,7 +45,12 @@
 
 
 <script>
-var start; // when each player started his/her turn
+import io from "socket.io-client";
+const socket = io("http://localhost:3002");
+
+socket.on("next round started", function(data) {});
+
+var start; // when each plasyer started his/her turn
 var totalStart; // when the overall draft started
 
 const minutes = 60; // seconds per minute
@@ -126,6 +131,26 @@ var formatSeconds = function(s) {
   return str;
 };
 
+//   clearTimeout(this.timer);
+
+//   // if the draft isn't done...
+//   if (this.draft.length > 0) {
+//     // get the next 'player'
+//     this.current = this.draft.shift();
+
+//     // record when this player started
+//     start = new Date();
+
+//     // fire off the clock
+//     this.timer = setTimeout(this.tick, 1000);
+
+//     // ... else draft is over
+//   } else {
+//     // shut down the UI
+//     var s = Math.floor((new Date() - totalStart) / 1000);
+//     var str = formatSeconds(s);
+//   }
+
 export default {
   name: "Summary",
   props: {
@@ -140,36 +165,26 @@ export default {
   },
   data() {
     return {
-      draft: populateDraft(24, this.$props.team.players),
-      current: populateDraft(24, this.$props.team.players)[0],
+      draft: {},
+      current: {},
       draftTimer: "00:00",
-      timer: {...this.timerInput}
+      timer: { ...this.timerInput }
     };
   },
   mounted: function() {
-    this.nextRound();
+    this.$socket.emit("next round", this.team);
+  },
+  sockets: {
+    nextRound: function(data) {
+      console.log(data);
+      if (data.current.teamName && data.current.teamName === this.team.name) {
+        this.current = data.current;
+      }
+    }
   },
   methods: {
     nextRound() {
-      clearTimeout(this.timer);
-
-      // if the draft isn't done...
-      if (this.draft.length > 0) {
-        // get the next 'player'
-        this.current = this.draft.shift();
-
-        // record when this player started
-        start = new Date();
-
-        // fire off the clock
-        this.timer = setTimeout(this.tick, 1000);
-
-        // ... else draft is over
-      } else {
-        // shut down the UI
-        var s = Math.floor((new Date() - totalStart) / 1000);
-        var str = formatSeconds(s);
-      }
+      this.$socket.emit("next round", this.team);
     },
     tick() {
       var s = Math.floor((new Date() - start) / 1000);

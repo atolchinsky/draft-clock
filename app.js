@@ -3,74 +3,139 @@ var express = require('express');
 var app = express();
 var path = require('path');
 var server = require('http').createServer(app);
-var io = require('../..')(server);
-var port = process.env.PORT || 8080;
+var io = require('socket.io')(server);
+var port = process.env.PORT || 3002;
 
 server.listen(port, function () {
-  console.log('Server listening at port %d', port);
+    console.log('Server listening at port %d', port);
 });
 
 // Routing
-app.use(express.static(path.join(__dirname, 'public')));
+//app.use(express.static(path.join(__dirname, 'public')));
 
-// Chatroom
+const minutes = 60; // seconds per minute
+const hours = 60 * 60; // seconds per hour
+const days = 60 * 60 * 24; // seconds per day
 
-var numUsers = 0;
 
 io.on('connection', function (socket) {
-  var addedUser = false;
 
-  // when the client emits 'new message', this listens and executes
-  socket.on('new message', function (data) {
-    // we tell the client to execute 'new message'
-    socket.broadcast.emit('new message', {
-      username: socket.username,
-      message: data
+    var populateDraft = function (rounds, teams) {
+        console.log("populateDraft(" + rounds + ", " + teams.length + ")");
+        var draft = [];
+        var total = rounds * teams.length;
+        var count = 0;
+
+        for (var r = 1; r <= rounds; r += 1) {
+            var start;
+            var end;
+            var incr;
+            var s = 1; //selection
+
+            // odd rounds (1, 3, 5, ...) count up from 1 ... N
+            if (r % 2 == 1) {
+                start = 1;
+                end = function (v) {
+                    return v <= teams.length;
+                };
+                incr = 1;
+                // even rounds (2, 4, 6, ...) count down from N ... 1
+            } else {
+                start = teams.length;
+                end = function (v) {
+                    return v >= 1;
+                };
+                incr = -1;
+            }
+
+            for (var t = start; end(t); t += incr) {
+                count += 1;
+                var percent = count / total * 100;
+                draft.push({
+                    round: r,
+                    rounds: rounds,
+                    selection: s,
+                    team: teams[t - 1],
+                    teams: teams,
+                    percent: percent
+                });
+                s += 1;
+            }
+        }
+        return draft;
+    };
+
+    var formatSeconds = function (s) {
+        var d = Math.floor(s / days);
+        s -= d * days;
+        var h = Math.floor(s / hours);
+        s -= h * hours;
+        var m = Math.floor(s / minutes);
+        s -= m * minutes;
+
+        var str = "";
+        if (d > 0) {
+            str += d + ".";
+        }
+        if (h > 0) {
+            str += h + ":";
+        }
+        if (m < 10) {
+            str += "0" + m + ":";
+        } else {
+            str += m + ":";
+        }
+        if (s < 10) {
+            str += "0" + s;
+        } else {
+            str += s;
+        }
+
+        return str;
+    };
+
+
+
+    let start; // when each player started his/her turn
+    let totalStart; // when the overall draft started
+
+    let draftLager;
+    let draftPorter;
+
+    // when moving to the next round
+    socket.on('next round', function (data) {
+
+        if (draft.length > 0) {
+            let current;
+
+            // get the next 'player'
+            if (data.name === 'Team Lager')
+                current = draftLager.shift();
+            if (data.name === 'Team Porter')
+                current = draftPorter.shift();
+
+            // record when this player started
+            start = new Date();
+
+            // fire off the clock
+            //this.timer = setTimeout(this.tick, 1000);
+
+            // ... else draft is over
+        } else {
+            if (data.name === 'Team Lager')
+                draftLager = populateDraft(24, data.players);
+            if (data.name === 'Team Porter')
+                draftPorter = populateDraft(24, data.players);
+
+            // shut down the UI
+            var s = Math.floor((new Date() - totalStart) / 1000);
+            var str = formatSeconds(s);
+        }
+
+        if (current) {
+            socket.broadcast.emit('nextRound', {
+                current
+            });
+        }
     });
-  });
-
-  // when the client emits 'add user', this listens and executes
-  socket.on('add user', function (username) {
-    if (addedUser) return;
-
-    // we store the username in the socket session for this client
-    socket.username = username;
-    ++numUsers;
-    addedUser = true;
-    socket.emit('login', {
-      numUsers: numUsers
-    });
-    // echo globally (all clients) that a person has connected
-    socket.broadcast.emit('user joined', {
-      username: socket.username,
-      numUsers: numUsers
-    });
-  });
-
-  // when the client emits 'typing', we broadcast it to others
-  socket.on('typing', function () {
-    socket.broadcast.emit('typing', {
-      username: socket.username
-    });
-  });
-
-  // when the client emits 'stop typing', we broadcast it to others
-  socket.on('stop typing', function () {
-    socket.broadcast.emit('stop typing', {
-      username: socket.username
-    });
-  });
-
-  // when moving to the next round
-  socket.on('next round', function (data) {
-    if (addedUser) {
-      --numUsers;
-
-      // echo globally that this client has left
-      socket.broadcast.emit('user left', {
-        username: socket.username,
-        numUsers: numUsers
-      });
-    }
-  });
 });
