@@ -2,7 +2,7 @@
   <div class="hello">
  <h2></h2>
     <div class="padding-5">
-        <div id="setup" class="col-sm-6 col-sm-offset-3 well">
+        <div id="setup" class="col-sm-12 well">
 
                 <fieldset>
                     <legend>Welcome to the FS Beer Draft!</legend>
@@ -12,12 +12,7 @@
                             <input type="text" class="form-control input-lg" id="name" name="name" value="3rd Annual FS Beer Draft" />
                         </div>
                     </div>
-                    <div class="form-group col-sm-12">
-                        <label for="rounds" class="control-label col-sm-3">Draft Color:</label>
-                        <div class=" col-sm-9">
-                            <input type="color" id="color" name="color" class="" />
-                        </div>
-                    </div>
+                    
                     <div class="form-group col-sm-12">
                         <label for="rounds" class="control-label col-sm-3">Number of Rounds</label>
                         <div class=" col-sm-9">
@@ -30,19 +25,37 @@
                         <div class="form-group col-sm-6" v-for="team in teams">
                             <h3 for="teamone" class="col-sm-12"> {{team.name}}</h3> 
                             <div class="col-sm-12" >
-                                <input type="text" placeholder="Name" @keyup.enter="AddToTeam(team)"  v-model="team.currentPlayer" class="form-control input-lg" />
+                                <input type="text" placeholder="Name" @keyup.enter="AddToTeam(team)"  v-model="team.currentPlayer.name" class="form-control input-lg" />
                                 <input type="button" class="col-sm-12 btn btn-default" value="Add" 
                                 @click="AddToTeam(team)"
                                 />                               
                             </div>
-                            <div class="col-sm-12" v-for="player in team.players">
-                                {{ player }}
-                            </div>
+                            <!-- <div class="col-sm-12" v-for="player in team.players">
+                                {{ player.name }}
+                            </div> -->
+                            <grid class="col-sm-6"
+                                :draggable="true"
+                                :sortable="true"
+                                :items="team.players"
+                                :cellWidth="100"
+                                :cellHeight="80"
+                                :windowWidth="330">
+
+                                  <template slot="cell" slot-scope="props" :window-width="330">
+                                      <div class="col-sm-4">
+                                        <Icon :color="props.item.color"
+                                            :index="props.index"
+                                            :with-button="true"
+                                            :text="props.item.name"
+                                            @remove="RemovePlayer(props, team.players)"/>
+                                            </div>
+                                    </template>
+                            </grid>
                         </div>
                     </div>
                     
                     <div class="col-xs-12">
-                        <button type="button" id="startDraft" name="start" class="btn btn-success btn-lg btn-block xxlFont">Beer me!</button>
+                        <button @click="StartDraft()" type="button" id="startDraft" name="start" class="btn btn-success btn-lg btn-block xxlFont">Beer me!</button>
                     </div>
                 </fieldset>
         </div>
@@ -52,13 +65,35 @@
 </template>
 
 <script>
+import Grid from 'vue-js-grid';
+import Router from 'vue-router';
+
+import { generateRGBColors } from "../util";
+import Icon from "./Icon.vue";
+
 var STORAGE_KEY = "fs-beer-draft-2017";
 var draftStorage = {
   fetch: function() {
     var drafts = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-    drafts.forEach(function(draft, index) {
-      todo.id = index;
-    });
+
+    if (drafts.length <= 0) {
+      drafts = 
+      [
+        {
+          name: "Team Lager",
+          currentPlayer: {},
+          players: [],
+          color: {}
+        },
+        {
+          name: "Team Porter",
+          currentPlayer: {},
+          players: [],
+          color: {}
+        }
+      ];
+    } 
+
     draftStorage.uid = drafts.length;
     return drafts;
   },
@@ -70,28 +105,34 @@ var draftStorage = {
 export default {
   name: "DraftStart",
   data() {
+    let colors = generateRGBColors(2);
+
     return {
       drafts: draftStorage.fetch(),
-      teams: [
-        {
-          name: "Team Lager",
-          currentPlayer: '',
-          players: []
-        },
-        {
-          name: "Team Porter",
-          currentPlayer: '',          
-          players: []
-        }
-      ],
+      teams: draftStorage.fetch(),
+      colors
     };
   },
   methods: {
     AddToTeam(team) {
+      team.currentPlayer.color = generateRGBColors(1)[0];
       team.players.push(team.currentPlayer);
 
-      team.currentPlayer = "";
+      team.currentPlayer = {};
+    },
+    RemovePlayer(player, team) {
+      player.remove();
+    },
+    SaveDraft() {
+      draftStorage.save([...this.teams]);
+    },
+    StartDraft() {
+        draftStorage.save([...this.teams]);
+        this.$router.push('/DraftBoard')
     }
+  },
+  components: {
+    Icon
   }
 };
 </script>
