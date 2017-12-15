@@ -134,7 +134,7 @@ var formatSeconds = function(s) {
 }
 
 export default {
-    name: 'Summary',
+    name: 'DraftSummary',
     props: {
         team: {
             type: Object,

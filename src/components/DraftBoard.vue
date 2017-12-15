@@ -2,10 +2,10 @@
 <div>
     <div class="hidden-xs">
         <div class="col-sm-6">
-            <Summary id="draftSummary1" :team="teams[0]" :timerInput="{}"></Summary>
+            <DraftSummary id="draftSummary1" :team="teams[0]" :timerInput="{}"></DraftSummary>
         </div>
         <div class="col-sm-6">
-            <Summary id="draftSummary2" :team="teams[1]" :timerInput="{}"></Summary>
+            <DraftSummary id="draftSummary2" :team="teams[1]" :timerInput="{}"></DraftSummary>
         </div>
     </div>
         <div v-if="!teamName" class="hidden-sm hidden-md hidden-lg">
@@ -41,7 +41,7 @@ var draftStorage = {
     }
 }
 
-import Summary from './Summary.vue'
+import DraftSummary from './DraftSummary.vue'
 
 export default {
     name: 'DraftBoard',
@@ -52,7 +52,7 @@ export default {
         }
     },
     components: {
-        Summary
+        DraftSummary
     },
     methods: {
         nextRound(team) {
