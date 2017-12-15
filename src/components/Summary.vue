@@ -13,6 +13,7 @@
                         </div>
                         <div class="panel-body">
                             <h1 id="draftTeam">{{current.team.name}}</h1>
+                            <h3 id="onDeckTeam">On Deck: {{current.onDeck.team.name}}</h3>
                         </div>
                         <div class="panel-footer">
                             <h2 id="draftTimer">{{draftTimer}}</h2>
@@ -40,7 +41,7 @@
             </form>
 
         </div>
-    </div> 
+    </div>
 </template>
 
 
