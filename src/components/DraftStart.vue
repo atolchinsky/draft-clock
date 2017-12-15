@@ -12,7 +12,7 @@
                             <input type="text" class="form-control input-lg" id="name" name="name" value="3rd Annual FS Beer Draft" />
                         </div>
                     </div>
-                    
+
                     <div class="form-group col-sm-12">
                         <label for="rounds" class="control-label col-sm-3">Number of Rounds</label>
                         <div class=" col-sm-9">
@@ -23,12 +23,12 @@
                     </div>
                     <div class="col-sm-12">
                         <div class="form-group col-sm-6" v-for="team in teams">
-                            <h3 for="teamone" class="col-sm-12"> {{team.name}}</h3> 
+                            <h3 for="teamone" class="col-sm-12"> {{team.name}}</h3>
                             <div class="col-sm-12" >
                                 <input type="text" placeholder="Name" @keyup.enter="AddToTeam(team)"  v-model="team.currentPlayer.name" class="form-control input-lg" />
-                                <input type="button" class="col-sm-12 btn btn-default" value="Add" 
+                                <input type="button" class="col-sm-12 btn btn-default" value="Add"
                                 @click="AddToTeam(team)"
-                                />                               
+                                />
                             </div>
                             <!-- <div class="col-sm-12" v-for="player in team.players">
                                 {{ player.name }}
@@ -39,8 +39,8 @@
                                 :items="team.players"
                                 :cellWidth="100"
                                 :cellHeight="80"
-                                :windowWidth="330">
-
+                                :windowWidth="330"
+                                @remove="(event) => SyncPlayerList(event, team)">
                                   <template slot="cell" slot-scope="props" :window-width="330">
                                       <div class="col-sm-4">
                                         <Icon :color="props.item.color"
@@ -53,14 +53,14 @@
                             </grid>
                         </div>
                     </div>
-                    
+
                     <div class="col-xs-12">
                         <button @click="StartDraft()" type="button" id="startDraft" name="start" class="btn btn-success btn-lg btn-block xxlFont">Beer me!</button>
                     </div>
                 </fieldset>
         </div>
     </div>
-    
+
   </div>
 </template>
 
@@ -77,7 +77,7 @@ var draftStorage = {
     var drafts = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
 
     if (drafts.length <= 0) {
-      drafts = 
+      drafts =
       [
         {
           name: "Team Lager",
@@ -92,7 +92,7 @@ var draftStorage = {
           color: {}
         }
       ];
-    } 
+    }
 
     draftStorage.uid = drafts.length;
     return drafts;
@@ -121,7 +121,10 @@ export default {
       team.currentPlayer = {};
     },
     RemovePlayer(player, team) {
-      player.remove();
+      player.remove()
+    },
+    SyncPlayerList(event, team) {
+      team.players = event.items.map((players) => players.item)
     },
     SaveDraft() {
       draftStorage.save([...this.teams]);
@@ -133,6 +136,9 @@ export default {
   },
   components: {
     Icon
+  },
+  mounted: () => {
+    this.teams = draftStorage.fetch()
   }
 };
 </script>
