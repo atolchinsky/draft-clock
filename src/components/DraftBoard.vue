@@ -1,10 +1,16 @@
 <template>
-    <div>
+<div>
+    <div class="hidden-xs">
         <div class="col-sm-6">
             <Summary id="draftSummary1" :team="teams[0]" :timerInput="{}"></Summary>
         </div>
         <div class="col-sm-6">
             <Summary id="draftSummary2" :team="teams[1]" :timerInput="{}"></Summary>
+        </div>
+    </div>
+        <div class="hidden-sm hidden-md hidden-lg">
+            <button class="btn btn-default col-xs-12">Lager Team</button>
+            <button class="btn btn-default col-xs-12">Porter Team</button>  
         </div>
     </div>
 </template>
@@ -34,7 +40,7 @@ export default {
     };
   },
   components: {
-      Summary
+    Summary
   },
   methods: {}
 };
