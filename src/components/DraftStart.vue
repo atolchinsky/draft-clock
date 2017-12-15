@@ -22,8 +22,8 @@
                         </div>
                     </div>
                     <div class="col-sm-12">
-                        <div class="form-group col-sm-6" v-for="team in teams">
-                            <h3 for="teamone" class="col-sm-12"> {{team.name}}</h3>
+                        <div class="form-group col-sm-12" v-for="team in teams">
+                          <h3 for="teamone" class="col-sm-12"> {{team.name}}</h3>
                             <div class="col-sm-12" >
                                 <input type="text" placeholder="Name" @keyup.enter="AddToTeam(team)"  v-model="team.currentPlayer.name" class="form-control input-lg" />
                                 <input type="button" class="col-sm-12 btn btn-default" value="Add"
@@ -33,16 +33,17 @@
                             <!-- <div class="col-sm-12" v-for="player in team.players">
                                 {{ player.name }}
                             </div> -->
-                            <grid class="col-sm-6"
+                            <grid class="grid col-sm-12"
                                 :draggable="true"
                                 :sortable="true"
                                 :items="team.players"
-                                :cellWidth="100"
+                                :cellWidth="120"
                                 :cellHeight="80"
-                                :windowWidth="330"
+                                :gridWidth="330"
+                                :center="true"
                                 @remove="(event) => SyncPlayerList(event, team)">
-                                  <template slot="cell" slot-scope="props" :window-width="330">
-                                      <div class="col-sm-4">
+                                  <template slot="cell" slot-scope="props">
+                                      <div class="col-sm-12">
                                         <Icon :color="props.item.color"
                                             :index="props.index"
                                             :with-button="true"
@@ -160,5 +161,9 @@ export default {
 }
 .xxlFont {
   font-size: xx-large;
+}
+
+.grid {
+  margin-left: -60px;
 }
 </style>

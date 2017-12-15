@@ -4,8 +4,6 @@
     <div v-if="withButton"
          class="icon-delete-btn"
          @mousedown="remove"></div>
-    <slot>
-    </slot>
   </div>
 </template>
 
